@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { Builder, Browser, By, until } = require("selenium-webdriver");
+const xlsx = require("json-as-xlsx");
 
 async function getProspects() {
   let driver = await new Builder().forBrowser(Browser.CHROME).build();
@@ -33,11 +34,12 @@ async function getProspects() {
     //wait for the prospects page
     await driver.wait(until.titleIs("Vaam | Prospects"), 1000);
 
-    //wait for the prospects to load
-    await fakePromise(10);
+    //wait for the prospects list to load
+    await fakePromise(5);
 
     //now we have prospects table
     const propsects = [];
+    const prospectDetails = [];
 
     //getting the table with prospects
     const table = await driver.findElement(
@@ -50,8 +52,6 @@ async function getProspects() {
 
     console.log("total records ", trs.length);
 
-    const data = [];
-    const detailedData = [];
     for (let i = 1; i < trs.length; i++) {
       const tds = await trs[i].findElements(By.tagName("td"));
       //checking if we have correct data in this row otherwise skip it
@@ -59,7 +59,7 @@ async function getProspects() {
       for (let x = 0; x < tds.length; x++) {
         obj[x] = await tds[x].getText();
       }
-      data.push(obj);
+      propsects.push(obj);
 
       //start click the row
       const button = await tds[0].findElement(By.tagName("button"));
@@ -159,7 +159,7 @@ async function getProspects() {
             .getAttribute("value")) || "";
 
         //glab our data!
-        detailedData.push({
+        prospectDetails.push({
           firstName,
           lastName,
           phone,
@@ -178,8 +178,42 @@ async function getProspects() {
       }
     }
 
-    console.log({ data });
-    console.log({ detailedData });
+    console.log({ propsects });
+    console.log({ prospectDetails });
+
+    console.log(".....GENERATING EXCEL FILES....");
+
+    //prepare excel data
+    const prospectsExcellData = [
+      {
+        sheet: "Prospects list",
+        columns: Object.keys(propsects[0]).map((item) => ({
+          label: item,
+          value: item,
+        })),
+        content: propsects,
+      },
+    ];
+
+    xlsx(prospectsExcellData, {
+      fileName: "prospects",
+      writeMode: "writeFile", // The available parameters are 'WriteFile' and 'write'. This setting is optional. Useful in such cases https://docs.sheetjs.com/docs/solutions/output#example-remote-file
+    });
+
+    const prospectDetailsExcelData = [
+      {
+        sheet: "Prospects details",
+        columns: Object.keys(prospectDetails[0]).map((item) => ({
+          label: item,
+          value: item,
+        })),
+        content: prospectDetails,
+      },
+    ];
+    xlsx(prospectDetailsExcelData, {
+      fileName: "prospects-details",
+      writeMode: "writeFile", // The available parameters are 'WriteFile' and 'write'. This setting is optional. Useful in such cases https://docs.sheetjs.com/docs/solutions/output#example-remote-file
+    });
   } catch (error) {
     //handle the error
     console.log("Error: ", error.message || "Something went wrong");
