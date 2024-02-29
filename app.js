@@ -220,7 +220,7 @@ async function getProspects() {
     //handle the error
     console.log("Error: ", error.message || "Something went wrong");
   } finally {
-    // await driver.quit();
+    await driver.quit();
   }
 }
 
