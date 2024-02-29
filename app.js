@@ -61,8 +61,8 @@ async function getProspects() {
 
     console.log("total records ", trs.length);
 
-    // for (let i = 1; i < trs.length; i++) {
-    for (let i = 1; i < 5; i++) {
+    for (let i = 1; i < trs.length; i++) {
+      // for (let i = 1; i < 5; i++) {
       const tds = await trs[i].findElements(By.tagName("td"));
       //checking if we have correct data in this row otherwise skip it
       const obj = {};
